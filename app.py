@@ -5,7 +5,7 @@ from features import FAIXAS, faixa_etaria, extrair
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 modelo = joblib.load(os.path.join(BASE, "modelo.joblib"))  # gere com train_model.py e faça commit
-app = Flask(__name__)
+app = Flask(__name__, static_folder="public", static_url_path="")
 
 # ---- Armazenamento: Upstash Redis (Vercel) se houver variáveis de ambiente; senão, arquivo local ----
 REDIS_URL = os.environ.get("KV_REST_API_URL") or os.environ.get("UPSTASH_REDIS_REST_URL")
@@ -115,12 +115,12 @@ def medicoes_salvar():
         for r in d["rows"][:60]:
             a = str(r["a"])
             if not re.fullmatch(r"\d{1,2}:\d{2}|\d+(\.\d+)?", a): raise ValueError
-            rows.append({"a": a, "g": str(float(r["g"])).rstrip("0").rstrip(".")})
+            rows.append({"a": a, "g": str(float(r["g"])).rstrip("0").rstrip("."),
+                         "c": html.escape(str(r.get("c") or "").strip()[:200])})
         r = d["resumo"]
         m = {"id": uuid.uuid4().hex[:12], "criado": time.time(), "data": d["data"], "idade": float(d["idade"]),
              "insulina": bool(d["insulina"]), "rows": rows, "classe": html.escape(str(d["classe"])[:40]),
              "titulo": html.escape(str(d["titulo"])[:80]),
-             "comentario": html.escape(str(d.get("comentario") or "").strip()[:500]),
              "resumo": {k: float(r[k]) for k in ("media", "maxima", "minima", "no_alvo")}}
     except (KeyError, ValueError, TypeError):
         return jsonify(erro="Dados inválidos."), 400
