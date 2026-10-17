@@ -120,6 +120,7 @@ def medicoes_salvar():
         m = {"id": uuid.uuid4().hex[:12], "criado": time.time(), "data": d["data"], "idade": float(d["idade"]),
              "insulina": bool(d["insulina"]), "rows": rows, "classe": html.escape(str(d["classe"])[:40]),
              "titulo": html.escape(str(d["titulo"])[:80]),
+             "comentario": html.escape(str(d.get("comentario") or "").strip()[:500]),
              "resumo": {k: float(r[k]) for k in ("media", "maxima", "minima", "no_alvo")}}
     except (KeyError, ValueError, TypeError):
         return jsonify(erro="Dados inválidos."), 400

@@ -10,7 +10,7 @@ main{max-width:980px;margin:0 auto;padding:32px 20px}h1{margin:0;font-size:1.8re
 .grid{display:grid;grid-template-columns:340px 1fr;gap:20px}@media(max-width:800px){.grid{grid-template-columns:1fr}}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:22px;box-shadow:0 6px 24px rgba(80,60,160,.07)}
 label{display:block;font-size:.8rem;color:var(--mut);margin:0 0 6px;font-weight:600}
-input[type=number],input[type=text]{font-family:inherit;color-scheme:light dark;width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--bd);background:transparent;color:var(--tx);font-size:1rem}
+input[type=number],input[type=text],textarea{font-family:inherit;color-scheme:light dark;width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--bd);background:transparent;color:var(--tx);font-size:1rem}
 input[type=time]::-webkit-calendar-picker-indicator{opacity:.6;cursor:pointer}input:focus{outline:2px solid var(--pri);border-color:transparent}
 .toggle{display:flex;align-items:center;justify-content:space-between;margin:16px 0;padding:12px 14px;border-radius:14px;background:rgba(124,92,255,.08)}
 .toggle input{width:20px;height:20px;accent-color:var(--pri)}.row{display:grid;grid-template-columns:1fr 1fr 32px;gap:8px;margin-bottom:8px}
@@ -21,7 +21,7 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:.6;cursor:pointer}in
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.stat{padding:12px;border-radius:14px;background:rgba(124,92,255,.06);text-align:center}
 .stat b{display:block;font-size:1.3rem}.stat span{font-size:.72rem;color:var(--mut)}
 .alert{padding:12px 14px;border-radius:12px;background:rgba(220,38,38,.1);color:var(--bad);margin:8px 0;font-weight:600}
-.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--bd)}.mini{border:0;background:rgba(124,92,255,.12);color:var(--pri);border-radius:10px;padding:6px 10px;margin-left:6px;cursor:pointer;font-weight:600}.hint{font-size:.78rem;color:var(--mut);margin-top:16px}#res{display:none}
+.item .nota{display:block;margin-top:4px;font-style:italic;color:var(--mut)}textarea{resize:vertical}.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--bd)}.mini{border:0;background:rgba(124,92,255,.12);color:var(--pri);border-radius:10px;padding:6px 10px;margin-left:6px;cursor:pointer;font-weight:600}.hint{font-size:.78rem;color:var(--mut);margin-top:16px}#res{display:none}
 </style></head><body><main>
 <h1>🐾 Curva Glicêmica Felina</h1><p class="sub">Registre as leituras e veja a análise com base na idade do gato.</p>
 <div class="grid">
@@ -29,7 +29,8 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:.6;cursor:pointer}in
  <label>Idade do gato (anos)</label><input id="idade" type="number" min="0" step="0.1" value="3">
  <label style="margin-top:14px">Data da medição</label><input id="data" type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" oninput="mask(this,'d')">
  <div class="toggle"><div><b>Uso de insulina</b><br><small style="color:var(--mut)">Desmarque se não usa</small></div><input id="ins" type="checkbox" onchange="modo()"></div>
- <div class="row" style="margin-bottom:4px"><label id="lblt">Horário da medição</label><label>Glicose (mg/dL)</label><span></span></div>
+ <label style="margin-top:14px">Comentário (opcional)</label><textarea id="coment" maxlength="500" rows="2" placeholder="Ex.: medição feita após uma convulsão"></textarea>
+ <div class="row" style="margin:14px 0 4px"><label id="lblt">Horário da medição</label><label>Glicose (mg/dL)</label><span></span></div>
  <div id="rows"></div>
  <button class="btn sec" onclick="add()">+ Adicionar leitura</button>
  <button class="btn pri" onclick="analisar()">Analisar curva</button>
@@ -85,12 +86,12 @@ async function api(u,o={}){const h={"Content-Type":"application/json","X-Senha":
  if(r.status===401){const s=prompt("Senha de acesso:");if(!s)return r;sessionStorage.setItem("senha",s);h["X-Senha"]=s;r=await fetch(u,{...o,headers:h})}
  return r}
 async function salvar(){if(!ultima)return;if(!dataOk($("data").value))return alert("Use uma data válida no formato dd/mm/aaaa.");
- const r=await api("/api/medicoes",{method:"POST",body:JSON.stringify({data:brToIso($("data").value),idade:$("idade").value,insulina:$("ins").checked,...ultima})});
+ const r=await api("/api/medicoes",{method:"POST",body:JSON.stringify({data:brToIso($("data").value),idade:$("idade").value,insulina:$("ins").checked,comentario:$("coment").value,...ultima})});
  if(!r.ok)return alert((await r.json()).erro||"Erro ao salvar");hist()}
 async function hist(){const r=await api("/api/medicoes");if(!r.ok){$("hist").textContent="Não foi possível carregar o histórico.";return}
  const L=window._L=await r.json();
- $("hist").innerHTML=L.length?L.map(m=>`<div class="item"><div><b>${m.data.split("-").reverse().join("/")}</b> · ${m.idade} ano(s) · ${m.insulina?"com":"sem"} insulina<br><small style="color:var(--mut)">${m.titulo} · média ${Math.round(m.resumo.media)} mg/dL</small></div><div><button class="mini" onclick="abrir('${m.id}')">Abrir</button><button class="mini" onclick="excluir('${m.id}')">✕</button></div></div>`).join(""):'<small style="color:var(--mut)">Nenhuma medição salva ainda.</small>'}
-function abrir(id){const m=window._L.find(x=>x.id===id);$("idade").value=m.idade;$("data").value=isoToBr(m.data);$("ins").checked=m.insulina;modo();$("rows").innerHTML="";m.rows.forEach(x=>add(x.a,x.g));analisar()}
+ $("hist").innerHTML=L.length?L.map(m=>`<div class="item"><div><b>${m.data.split("-").reverse().join("/")}</b> · ${m.idade} ano(s) · ${m.insulina?"com":"sem"} insulina<br><small style="color:var(--mut)">${m.titulo} · média ${Math.round(m.resumo.media)} mg/dL</small>${m.comentario?`<small class="nota">💬 ${m.comentario}</small>`:""}</div><div><button class="mini" onclick="abrir('${m.id}')">Abrir</button><button class="mini" onclick="excluir('${m.id}')">✕</button></div></div>`).join(""):'<small style="color:var(--mut)">Nenhuma medição salva ainda.</small>'}
+function abrir(id){const m=window._L.find(x=>x.id===id);$("idade").value=m.idade;$("data").value=isoToBr(m.data);$("coment").value=m.comentario||"";$("ins").checked=m.insulina;modo();$("rows").innerHTML="";m.rows.forEach(x=>add(x.a,x.g));analisar()}
 async function excluir(id){if(!confirm("Excluir esta medição?"))return;await api("/api/medicoes/"+id,{method:"DELETE"});hist()}
 hist();
 </script></body></html>
