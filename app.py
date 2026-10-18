@@ -34,25 +34,31 @@ def _ler():
         return {}
 
 
+def _local():
+    if os.environ.get("VERCEL"):  # disco da Vercel é temporário: sem Redis, os dados seriam perdidos
+        raise RuntimeError("Banco de dados não configurado: conecte o Upstash Redis ao projeto na Vercel.")
+    return _ler()
+
+
 def hall(k):
     if REDIS_URL:
         f = _redis("HGETALL", k) or []
         return dict(zip(f[::2], f[1::2]))
-    return _ler().get(k, {})
+    return _local().get(k, {})
 
 
 def hget(k, f):
-    return _redis("HGET", k, f) if REDIS_URL else _ler().get(k, {}).get(f)
+    return _redis("HGET", k, f) if REDIS_URL else _local().get(k, {}).get(f)
 
 
 def hset(k, f, v):
     if REDIS_URL: return _redis("HSET", k, f, v)
-    d = _ler(); d.setdefault(k, {})[f] = v; json.dump(d, open(ARQ, "w", encoding="utf-8"))
+    d = _local(); d.setdefault(k, {})[f] = v; json.dump(d, open(ARQ, "w", encoding="utf-8"))
 
 
 def hdel(k, f):
     if REDIS_URL: return _redis("HDEL", k, f)
-    d = _ler(); d.get(k, {}).pop(f, None); json.dump(d, open(ARQ, "w", encoding="utf-8"))
+    d = _local(); d.get(k, {}).pop(f, None); json.dump(d, open(ARQ, "w", encoding="utf-8"))
 
 
 def db_listar(u):
@@ -79,6 +85,11 @@ def login_obrigatorio(f):
 def _cred():
     d = request.get_json(force=True, silent=True) or {}
     return str(d.get("usuario", "")).strip().lower(), str(d.get("senha", ""))
+
+
+@app.errorhandler(RuntimeError)
+def sem_banco(e):
+    return jsonify(erro=str(e)), 503
 
 
 @app.post("/api/cadastro")
