@@ -24,16 +24,17 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:.6;cursor:pointer}in
 .alert{padding:12px 14px;border-radius:12px;background:rgba(220,38,38,.1);color:var(--bad);margin:8px 0;font-weight:600}
 .item .nota{display:block;margin-top:4px;font-style:italic;color:var(--mut)}textarea{resize:vertical}.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--bd)}.mini{border:0;background:rgba(124,92,255,.12);color:var(--pri);border-radius:10px;padding:6px 10px;margin-left:6px;cursor:pointer;font-weight:600}.pen{opacity:.4}.pen.on{opacity:1}.row .obs{grid-column:1/-1;font-size:.85rem;padding:8px 12px}.obsitem{padding:8px 12px;margin:6px 0;border-radius:12px;background:rgba(245,158,11,.12);font-size:.9rem}.hint{font-size:.78rem;color:var(--mut);margin-top:16px}#res{display:none}
 .tabs{display:flex;gap:8px;margin-bottom:16px}.tabs button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--bd);background:transparent;color:var(--mut);font-weight:700;cursor:pointer}.tabs button.on{background:var(--pri);color:#fff;border-color:var(--pri)}.who{display:flex;gap:10px;align-items:center;justify-content:space-between;color:var(--mut);margin:-8px 0 18px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 </style></head><body data-usuario='{{ usuario|tojson }}'><main>
 <h1><img src="/img/favicon.svg" width="38" height="38" alt="" style="vertical-align:-9px;margin-right:6px">Curva Glicêmica Felina</h1><p class="sub">Registre as leituras e veja a análise com base na idade do gato.</p>
-<div class="who" id="who" hidden><span>👤 <b id="quem"></b></span><button class="mini" onclick="sair()">Sair</button></div>
-<section class="card" id="auth" hidden style="max-width:420px;margin:0 auto">
+<div class="who" id="who"><span id="quem"></span><button class="mini" id="btnWho"></button></div>
+<section class="card" id="auth" hidden style="max-width:420px;margin:0 auto 20px">
  <div class="tabs"><button id="tabE" class="on" onclick="tab('entrar')">Entrar</button><button id="tabC" onclick="tab('criar')">Criar conta</button></div>
  <label>Usuário</label><input id="u" type="text" autocomplete="username" autocapitalize="none" maxlength="30">
  <label style="margin-top:14px">Senha</label><input id="s" type="password" autocomplete="current-password" maxlength="128" onkeydown="if(event.key==='Enter')auth()">
  <div class="alert" id="autherr" hidden></div>
  <button class="btn pri" id="btnAuth" onclick="auth()">Entrar</button></section>
-<div id="appui" hidden><div class="grid">
+<div id="appui"><div class="grid">
 <section class="card">
  <label>Idade do gato (anos)</label><input id="idade" type="number" min="0" step="0.1" value="3">
  <label style="margin-top:14px">Data da medição</label><input id="data" type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" oninput="mask(this,'d')">
@@ -46,7 +47,7 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:.6;cursor:pointer}in
 </section>
 <section class="card"><canvas id="chart" height="260"></canvas>
  <div id="res"><span class="badge" id="faixa"></span><h2 id="tit" style="margin:10px 0 4px"></h2><p id="txt" style="margin:0;color:var(--mut)"></p>
- <div id="alerts"></div><div class="stats" id="stats"></div><div id="obs"></div><small style="color:var(--mut)" id="conf"></small><button class="btn pri" onclick="salvar()">💾 Salvar medição</button></div>
+ <div id="alerts"></div><div class="stats" id="stats"></div><div id="obs"></div><small style="color:var(--mut)" id="conf"></small><div class="acts"><button class="btn sec" onclick="baixarGrafico()">🖼️ Baixar gráfico</button><button class="btn sec" onclick="baixarResultado()">📄 Baixar resultado</button></div><button class="btn pri" id="btnSalvar" onclick="salvar()" hidden>💾 Salvar medição</button><p class="hint" id="dicaGuest" hidden>Modo visitante: entre na sua conta para salvar esta medição no histórico.</p></div>
 </section></div>
-<section class="card" style="margin-top:20px"><h3 style="margin:0 0 6px">Histórico</h3><div id="hist"></div></section></div></main>
+<section class="card" id="histCard" hidden style="margin-top:20px"><h3 style="margin:0 0 6px">Histórico</h3><div id="hist"></div></section></div></main>
 <script src="/js/app.js"></script></body></html>

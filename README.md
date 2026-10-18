@@ -60,6 +60,11 @@ Alertas por regra, independentes do modelo: leitura abaixo de 50 mg/dL (possíve
 - Curvas com poucas leituras ou muito espaçadas perdem precisão.
 - Ideias: salvar histórico por gato (SQLite), comparar curvas, exportar PDF para levar à consulta, adicionar frutosamina.
 
+## Modo visitante e conta
+
+- **Sem conta (visitante):** gera a curva, vê a análise e baixa o **gráfico** e o **resultado** (PNG). Nada é salvo: ao atualizar a página, ou entrar e sair, tudo é perdido.
+- **Com conta:** além disso, salva medições e observações no histórico (reabrir, excluir) e também baixa gráfico e resultado.
+
 ## Contas, histórico e deploy na Vercel
 
 Cada pessoa tem sua conta (usuário + senha). Valores, histórico e observações são **separados por usuário**: ninguém vê as medições de outra conta. A senha é guardada só como hash, e o login fica em um cookie assinado (30 dias).

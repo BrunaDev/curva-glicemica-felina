@@ -33,7 +33,7 @@ async function analisar(){
  $("alerts").innerHTML=d.alertas.map(a=>`<div class="alert">⚠️ ${a}</div>`).join("");
  const s=d.resumo;$("stats").innerHTML=[["Média",s.media],["Máxima",s.maxima],["Mínima (nadir)",s.minima],["Na faixa",s.no_alvo+"%"]].map(([k,v])=>`<div class="stat"><b>${v}</b><span>${k}</span></div>`).join("");
  $("obs").innerHTML=leituras.filter(p=>p.c).map(p=>`<div class="obsitem"><b>${esc(p.l)}${ins?" h":""}</b> · ${p.g} mg/dL — 💬 ${esc(p.c)}</div>`).join("");
- $("conf").textContent=`Confiança do modelo: ${d.confianca}%`;ultima={rows,titulo:d.titulo,classe:d.classe,resumo:d.resumo}}
+ $("conf").textContent=`Confiança do modelo: ${d.confianca}%`;ultima={rows,titulo:d.titulo,classe:d.classe,resumo:d.resumo,snap:{idade:$("idade").value,data:$("data").value,ins,faixa:`${d.faixa.nome} · ${d.faixa.min}–${d.faixa.max} mg/dL`,texto:d.texto,alertas:d.alertas,leit:leituras}}}
 function mask(el,t){let v=el.value.replace(/\D/g,"");
  v=t==="d"?v.slice(0,8).replace(/^(\d{2})(\d)/,"$1/$2").replace(/^(\d{2}\/\d{2})(\d)/,"$1/$2"):v.slice(0,4).replace(/^(\d{2})(\d)/,"$1:$2");el.value=v}
 const isoToBr=d=>d.split("-").reverse().join("/"),brToIso=d=>d.split("/").reverse().join("-");
@@ -56,4 +56,25 @@ function tab(m){modoAuth=m;$("tabE").classList.toggle("on",m==="entrar");$("tabC
 async function auth(){const r=await fetch(modoAuth==="entrar"?"/api/login":"/api/cadastro",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({usuario:$("u").value,senha:$("s").value})});
  const d=await r.json();if(!r.ok){$("autherr").textContent=d.erro;$("autherr").hidden=false;return}location.reload()}
 async function sair(){await fetch("/api/logout",{method:"POST"});location.reload()}
-if(U){$("appui").hidden=false;$("who").hidden=false;$("quem").textContent=U;hist()}else{$("auth").hidden=false}
+function abrirAuth(){$("auth").hidden=!$("auth").hidden;if(!$("auth").hidden)$("u").focus()}
+if(U){$("quem").textContent="👤 "+U;$("btnWho").textContent="Sair";$("btnWho").onclick=sair;$("btnSalvar").hidden=false;$("histCard").hidden=false;hist()}
+else{$("quem").textContent="Modo visitante · nada é salvo";$("btnWho").textContent="Entrar / Criar conta";$("btnWho").onclick=abrirAuth;$("dicaGuest").hidden=false}
+
+function salvarPng(c,nome){const a=document.createElement("a");a.href=c.toDataURL("image/png");a.download=nome;a.click()}
+function baixarGrafico(){if(!chart)return alert("Analise a curva primeiro.");const s=chart.canvas,c=document.createElement("canvas");c.width=s.width;c.height=s.height;
+ const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(s,0,0);salvarPng(c,"curva-glicemica.png")}
+function baixarResultado(){if(!chart||!ultima)return alert("Analise a curva primeiro.");
+ const W=900,P=40,s=chart.canvas,ch=Math.round(s.height*(W-2*P)/s.width),e=ultima,n=e.snap,r=e.resumo,ob=n.leit.filter(p=>p.c);
+ const c=document.createElement("canvas");c.width=W;c.height=3000;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,W,3000);
+ const q=(t,m)=>{const o=[];let l="";for(const w of t.split(" ")){if(x.measureText(l+w).width>m&&l){o.push(l.trim());l=""}l+=w+" "}o.push(l.trim());return o};
+ let y=P;const t=(txt,f,col,lh)=>{x.font=f;x.fillStyle=col;for(const l of q(txt,W-2*P)){y+=lh;x.fillText(l,P,y)}y+=6};
+ t("Curva Glicêmica Felina","bold 30px sans-serif","#5b3df5",36);
+ t(`${n.data} · ${n.idade} ano(s) · ${n.ins?"com":"sem"} insulina`,"18px sans-serif","#555",26);
+ t(`Faixa de referência: ${n.faixa}`,"18px sans-serif","#555",26);y+=10;
+ x.drawImage(s,P,y,W-2*P,ch);y+=ch+20;
+ t(e.titulo,"bold 24px sans-serif","#222",32);t(n.texto,"18px sans-serif","#444",26);
+ n.alertas.forEach(a=>t("⚠ "+a,"bold 18px sans-serif","#dc2626",26));y+=6;
+ t(`Média ${r.media} · Máxima ${r.maxima} · Mínima ${r.minima} mg/dL · ${r.no_alvo}% na faixa`,"bold 18px sans-serif","#222",26);
+ if(ob.length){y+=10;t("Observações","bold 18px sans-serif","#222",26);ob.forEach(p=>t(`${p.l}${n.ins?" h":""} · ${p.g} mg/dL — ${p.c}`,"17px sans-serif","#444",24))}
+ y+=14;t("Ferramenta educativa. Não substitui avaliação veterinária.","14px sans-serif","#888",20);
+ const f=document.createElement("canvas");f.width=W;f.height=Math.min(y+P,3000);f.getContext("2d").drawImage(c,0,0);salvarPng(f,"resultado-curva-glicemica.png")}
