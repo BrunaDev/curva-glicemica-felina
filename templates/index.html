@@ -38,7 +38,7 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:.6;cursor:pointer}in
 <section class="card">
  <label>Idade do gato (anos)</label><input id="idade" type="number" min="0" step="0.1" value="3">
  <label style="margin-top:14px">Data da medição</label><input id="data" type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" oninput="mask(this,'d')">
- <div class="toggle"><div><b>Uso de insulina</b><br><small style="color:var(--mut)">Desmarque se não usa</small></div><input id="ins" type="checkbox" onchange="modo()"></div>
+ <div class="toggle"><div><b>Uso de insulina</b><br><small style="color:var(--mut)">Marque se usa</small></div><input id="ins" type="checkbox" onchange="modo()"></div>
  <div class="row" style="margin:14px 0 4px"><label id="lblt">Horário da medição</label><label>Glicose (mg/dL)</label><span></span><span></span></div>
  <div id="rows"></div>
  <button class="btn sec" onclick="add()">+ Adicionar leitura</button>

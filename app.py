@@ -153,8 +153,12 @@ def analisar():
     fk = faixa_etaria(idade); f = FAIXAS[fk]
     proba = modelo.predict_proba([extrair(t, g, idade, insulina)])[0]
     classe = str(modelo.classes_[int(np.argmax(proba))])
-    titulo, texto = TEXTOS[classe]
-    if insulina and classe in EXTRA_INSULINA: texto += " " + EXTRA_INSULINA[classe]
+    conf = float(proba.max())
+    if conf < 0.6:
+        titulo, texto = "Padrão pouco definido", "A curva não se encaixa com clareza em nenhum padrão conhecido. Leve os valores ao veterinário."
+    else:
+        titulo, texto = TEXTOS[classe]
+        if insulina and classe in EXTRA_INSULINA: texto += " " + EXTRA_INSULINA[classe]
     ga = np.array(g); i = int(np.argmin(ga))
     alertas = []
     if ga.min() < 50: alertas.append("Glicose abaixo de 50 mg/dL: possível emergência. Procure atendimento veterinário imediatamente.")

@@ -46,7 +46,7 @@ async function salvar(){if(!ultima)return;if(!dataOk($("data").value))return ale
  if(!r.ok)return alert((await r.json()).erro||"Erro ao salvar");hist()}
 async function hist(){const r=await api("/api/medicoes");if(!r.ok){$("hist").textContent="Não foi possível carregar o histórico.";return}
  const L=window._L=await r.json();
- $("hist").innerHTML=L.length?L.map(m=>`<div class="item"><div><b>${m.data.split("-").reverse().join("/")}</b> · ${m.idade} ano(s) · ${m.insulina?"com":"sem"} insulina<br><small style="color:var(--mut)">${m.titulo} · média ${Math.round(m.resumo.media)} mg/dL</small>${m.rows.filter(x=>x.c).map(x=>`<small class="nota">💬 ${x.a}${m.insulina?" h":""} – ${x.c}</small>`).join("")}</div><div><button class="mini" onclick="abrir('${m.id}')">Abrir</button><button class="mini" onclick="excluir('${m.id}')">✕</button></div></div>`).join(""):'<small style="color:var(--mut)">Nenhuma medição salva ainda.</small>'}
+ $("hist").innerHTML=L.length?L.map(m=>`<div class="item"><div><b>${m.data.split("-").reverse().join("/")}</b> · ${m.idade} ano(s) · ${m.insulina?"com":"sem"} insulina<br><small style="color:var(--mut)">${m.titulo} · média ${Math.round(m.resumo.media)} mg/dL</small>${m.rows.map(x=>`<small class="nota">${x.a}${m.insulina?" h":""} · ${x.g} mg/dL${x.c?" — 💬 "+x.c:""}</small>`).join("")}</div><div><button class="mini" onclick="abrir('${m.id}')">Abrir</button><button class="mini" onclick="excluir('${m.id}')">✕</button></div></div>`).join(""):'<small style="color:var(--mut)">Nenhuma medição salva ainda.</small>'}
 function abrir(id){const m=window._L.find(x=>x.id===id);$("idade").value=m.idade;$("data").value=isoToBr(m.data);$("ins").checked=m.insulina;modo();$("rows").innerHTML="";m.rows.forEach(x=>add(x.a,x.g,x.c));analisar()}
 async function excluir(id){if(!confirm("Excluir esta medição?"))return;await api("/api/medicoes/"+id,{method:"DELETE"});hist()}
 let modoAuth="entrar";
@@ -78,3 +78,4 @@ function baixarResultado(){if(!chart||!ultima)return alert("Analise a curva prim
  if(ob.length){y+=10;t("Observações","bold 18px sans-serif","#222",26);ob.forEach(p=>t(`${p.l}${n.ins?" h":""} · ${p.g} mg/dL — ${p.c}`,"17px sans-serif","#444",24))}
  y+=14;t("Ferramenta educativa. Não substitui avaliação veterinária.","14px sans-serif","#888",20);
  const f=document.createElement("canvas");f.width=W;f.height=Math.min(y+P,3000);f.getContext("2d").drawImage(c,0,0);salvarPng(f,"resultado-curva-glicemica.png")}
+ 

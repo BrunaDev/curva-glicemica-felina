@@ -8,7 +8,7 @@ App web simples para registrar e analisar a curva de glicose de gatos. Funciona 
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+.venv\Scripts\activate
 pip install -r requirements.txt
 python train_model.py            # gera o modelo.joblib (obrigatório antes de rodar o app)
 python app.py
@@ -50,7 +50,8 @@ Alertas por regra, independentes do modelo: leitura abaixo de 50 mg/dL (possíve
 ## Como funciona
 
 - `features.py`: faixas por idade e extração de features da curva (média, máx, mín, amplitude, horário do nadir, inclinação, primeira/última leitura, % acima/abaixo da faixa, idade, insulina).
-- `train_model.py`: gera 12.000 curvas sintéticas rotuladas, treina um `RandomForestClassifier` e imprime o relatório de métricas (salva `modelo.joblib`).
+- `train_model.py`: gera 17.500 curvas sintéticas (3.500 por padrão, incluindo hipoglicemia persistente, em queda e em recuperação), descartando as que não cumprem a definição da classe. Treina um `RandomForestClassifier` (200 árvores) e imprime as métricas (salva `modelo.joblib`).
+- A **confiança** é a proporção de árvores que votam na classe escolhida. Abaixo de 60%, o app mostra "Padrão pouco definido" em vez de forçar uma classe. Confiança alta indica que a curva se parece com os padrões do treino, não que o diagnóstico está validado.
 - `app.py`: API Flask (`POST /api/analisar`, `/api/medicoes`) e página.
 - `templates/index.html`: interface (responsiva, com modo escuro automático).
 
@@ -83,4 +84,4 @@ Passo a passo:
 6. Abra o site e crie sua conta. **A primeira conta criada herda as medições salvas antes do login existir.**
 7. Depois de criar as contas necessárias, defina `ALLOW_SIGNUP=false` e faça redeploy para fechar o cadastro. Para criar uma conta nova depois, volte para `true` temporariamente.
 
-`APP_PASSWORD` não é mais usada e pode ser removida. Após 8 senhas erradas seguidas, o usuário fica bloqueado por 15 minutos.
+Após 8 senhas erradas seguidas, o usuário fica bloqueado por 15 minutos.
