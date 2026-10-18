@@ -60,18 +60,22 @@ Alertas por regra, independentes do modelo: leitura abaixo de 50 mg/dL (possíve
 - Curvas com poucas leituras ou muito espaçadas perdem precisão.
 - Ideias: salvar histórico por gato (SQLite), comparar curvas, exportar PDF para levar à consulta, adicionar frutosamina.
 
-## Histórico de medições e deploy na Vercel
+## Contas, histórico e deploy na Vercel
 
-Clique em **Salvar medição** após analisar: data, idade, modo (com/sem insulina), leituras e resultado ficam no **Histórico**, onde dá para reabrir ou excluir.
+Cada pessoa tem sua conta (usuário + senha). Valores, histórico e observações são **separados por usuário**: ninguém vê as medições de outra conta. A senha é guardada só como hash, e o login fica em um cookie assinado (30 dias).
 
-**Onde salva:** localmente, em `medicoes.json`. Na Vercel o disco é temporário, então o app usa **Upstash Redis** via REST (sem dependências extras).
+**Onde salva:** localmente, em `dados.json`. Na Vercel o disco é temporário, então o app usa **Upstash Redis** via REST.
 
 Passo a passo:
 
 1. Rode `python train_model.py` e **faça commit do `modelo.joblib`** (a Vercel não treina no servidor).
 2. Suba o projeto no GitHub e importe na Vercel (ela detecta o Flask em `app.py`).
-3. No projeto, aba **Storage → Marketplace → Upstash for Redis**, crie e conecte. Isso injeta `KV_REST_API_URL` e `KV_REST_API_TOKEN` automaticamente.
-4. **Recomendado:** em Settings → Environment Variables, crie `APP_PASSWORD` com uma senha. São dados de saúde e a URL é pública: sem senha, qualquer pessoa com o link vê e apaga o histórico. O app pede a senha ao abrir.
+3. **Storage → Marketplace → Upstash for Redis**: crie e conecte. Isso injeta `KV_REST_API_URL` e `KV_REST_API_TOKEN`.
+4. **Settings → Environment Variables**, em Production, Preview e Development:
+   - `SECRET_KEY` (obrigatória): gere com `python -c "import secrets; print(secrets.token_hex(32))"`. Trocar o valor desconecta todo mundo.
+   - `ALLOW_SIGNUP` (opcional): `false` bloqueia novos cadastros. Padrão: liberado.
 5. Faça o redeploy.
+6. Abra o site e crie sua conta. **A primeira conta criada herda as medições salvas antes do login existir.**
+7. Depois de criar as contas necessárias, defina `ALLOW_SIGNUP=false` e faça redeploy para fechar o cadastro. Para criar uma conta nova depois, volte para `true` temporariamente.
 
-Se mudar a versão do scikit-learn no `requirements.txt`, rode o treino de novo para gerar um `modelo.joblib` compatível.
+`APP_PASSWORD` não é mais usada e pode ser removida. Após 8 senhas erradas seguidas, o usuário fica bloqueado por 15 minutos.
